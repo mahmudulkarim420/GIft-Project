@@ -75,12 +75,11 @@ export default function BirthdaySurprise() {
   }, [step]);
 
   // Snappy escape logic using Framer Motion
-  const handleNoHover = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
-    // Crucial for mobile: Prevent default behavior and stop propagation
-    // This ensures the "No" button doesn't trigger ghost clicks or accidental taps on the "Yes" button
+  const handleNoHover = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
+    // Prevent default and propagation to stop accidental clicks on mobile
     if (e) {
-      if (e.cancelable) e.preventDefault();
-      e.stopPropagation();
+      if (typeof e.preventDefault === 'function' && e.cancelable) e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
     }
     
     if (!noButtonRef.current || !modalRef.current) return;
@@ -91,20 +90,45 @@ export default function BirthdaySurprise() {
     // Get current dimensions
     const rect = btn.getBoundingClientRect();
     const modalRect = modal.getBoundingClientRect();
-    const buttonWidth = rect.width;
-    const buttonHeight = rect.height;
+    const buttonWidth = rect.width || 120; // fallback width
+    const buttonHeight = rect.height || 48; // fallback height
 
     // Boundary Check: Ensure button stays away from edges
-    const screenPadding = 60; 
+    const screenPadding = 40; 
     const maxTop = window.innerHeight - buttonHeight - screenPadding;
     const maxLeft = window.innerWidth - buttonWidth - screenPadding;
+
+    // Get pointer position for evasive logic
+    let px = 0, py = 0;
+    if (e) {
+        if ('clientX' in e) {
+            px = e.clientX;
+            py = e.clientY;
+        } else if ('touches' in e && e.touches[0]) {
+            px = e.touches[0].clientX;
+            py = e.touches[0].clientY;
+        }
+    }
     
-    // Target screen coordinates
-    const targetScreenTop = Math.max(screenPadding, Math.random() * (maxTop - screenPadding) + screenPadding);
-    const targetScreenLeft = Math.max(screenPadding, Math.random() * (maxLeft - screenPadding) + screenPadding);
+    // Pick a random target that is NOT where the mouse is
+    let targetScreenTop = 0;
+    let targetScreenLeft = 0;
+    let attempts = 0;
+    const minDistance = 150; // Minimum distance from pointer
+
+    do {
+        targetScreenTop = Math.max(screenPadding, Math.random() * (maxTop - screenPadding) + screenPadding);
+        targetScreenLeft = Math.max(screenPadding, Math.random() * (maxLeft - screenPadding) + screenPadding);
+        attempts++;
+        
+        // Calculate distance from pointer
+        const dist = Math.sqrt(Math.pow(targetScreenLeft - px, 2) + Math.pow(targetScreenTop - py, 2));
+        if (dist > minDistance || attempts > 10) break;
+    } while (true);
 
     // Convert screen coordinates to modal-relative offsets
-    const newX = targetScreenLeft - (modalRect.left + modalRect.width / 2);
+    // This assumes the button's static position is near the bottom of the modal
+    const newX = targetScreenLeft - (modalRect.left + modalRect.width / 2 - buttonWidth / 2);
     const newY = targetScreenTop - (modalRect.top + modalRect.height - 100);
 
     setNoButtonPos({
@@ -337,10 +361,20 @@ export default function BirthdaySurprise() {
                                     stiffness: 400, 
                                     damping: 30,
                                 }}
-                                onMouseEnter={handleNoHover}
-                                onTouchStart={handleNoHover}
-                                onClick={handleNoHover}
-                                className="flex-1 sm:flex-none sm:px-10 py-4 rounded-2xl bg-white border border-[#f3e8ea] text-[#d1b9be] font-bold text-base transition-colors cursor-default select-none pointer-events-auto shadow-sm z-[9999]"
+                                onPointerEnter={handleNoHover}
+                                onPointerDown={(e) => {
+                                    // Specifically handle touch/pointer down to move immediately
+                                    // and prevent the event from reaching anything else.
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleNoHover(e);
+                                }}
+                                onClick={(e) => {
+                                    // Ensure click does nothing and doesn't bubble
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                className="flex-1 sm:flex-none sm:px-10 py-4 rounded-2xl bg-white border border-[#f3e8ea] text-[#d1b9be] font-bold text-base transition-colors cursor-default select-none pointer-events-auto shadow-sm z-[9999] touch-none"
                                 style={{
                                     zIndex: noButtonPos.isEscaping ? 9999 : 1
                                 }}

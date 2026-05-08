@@ -50,6 +50,7 @@ export default function BirthdaySurprise() {
   const [step, setStep] = useState(1);
   const [showFinale, setShowFinale] = useState(false);
   const [noButtonPos, setNoButtonPos] = useState({ x: 0, y: 0, isEscaping: false });
+  const isProcessingNo = useRef(false);
   const [floatingShapes] = useState(() => {
     const shapes = Array.from({ length: 16 }, (_, i) => ({
       id: i,
@@ -76,6 +77,9 @@ export default function BirthdaySurprise() {
 
   // Snappy escape logic using Framer Motion
   const moveNoButton = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
+    isProcessingNo.current = true;
+    setTimeout(() => { isProcessingNo.current = false; }, 400);
+
     // Prevent default and propagation to stop accidental clicks on mobile
     if (e) {
       if (typeof e.preventDefault === 'function' && e.cancelable) e.preventDefault();
@@ -139,6 +143,8 @@ export default function BirthdaySurprise() {
   };
 
   const handleYes = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
+    if (isProcessingNo.current) return;
+
     // Safety check: Ensure the event target is not the No button or within it
     if (e && noButtonRef.current && noButtonRef.current.contains(e.target as Node)) {
         return;
@@ -344,7 +350,7 @@ export default function BirthdaySurprise() {
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleYes}
-                                className="group relative flex-[1.5] sm:flex-none sm:px-10 py-4 rounded-2xl bg-gradient-to-r from-[#ff8fa3] to-[#ffb3c1] text-white font-bold text-base transition-all shadow-[0_10px_20px_rgba(255,143,163,0.3)] hover:shadow-[0_15px_30px_rgba(255,143,163,0.4)]"
+                                className="group relative flex-[1.5] sm:flex-none sm:px-10 py-4 rounded-2xl bg-gradient-to-r from-[#ff8fa3] to-[#ffb3c1] text-white font-bold text-base transition-all shadow-[0_10px_20px_rgba(255,143,163,0.3)] hover:shadow-[0_15px_30px_rgba(255,143,163,0.4)] z-10"
                             >
                                 <span className="relative z-10 whitespace-nowrap">
                                     {step === 1 && "Yes, I'm ready! ❤️"}
@@ -372,18 +378,18 @@ export default function BirthdaySurprise() {
                                 onPointerDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    moveNoButton(e);
                                 }}
                                 onPointerUp={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    moveNoButton(e);
                                 }}
                                 onClick={(e) => {
                                     // Ensure click does nothing and doesn't bubble
                                     e.preventDefault();
                                     e.stopPropagation();
                                 }}
-                                className="flex-1 sm:flex-none sm:px-10 py-4 rounded-2xl bg-white border border-[#f3e8ea] text-[#d1b9be] font-bold text-base transition-colors cursor-default select-none pointer-events-auto shadow-sm z-[9999] touch-none"
+                                className="flex-1 sm:flex-none sm:px-10 py-4 rounded-2xl bg-white border border-[#f3e8ea] text-[#d1b9be] font-bold text-base transition-colors cursor-default select-none pointer-events-auto shadow-sm z-50 touch-none"
                             >
                                 No
                             </motion.button>

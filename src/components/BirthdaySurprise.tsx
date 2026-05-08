@@ -75,7 +75,7 @@ export default function BirthdaySurprise() {
   }, [step]);
 
   // Snappy escape logic using Framer Motion
-  const handleNoHover = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
+  const moveNoButton = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
     // Prevent default and propagation to stop accidental clicks on mobile
     if (e) {
       if (typeof e.preventDefault === 'function' && e.cancelable) e.preventDefault();
@@ -138,7 +138,12 @@ export default function BirthdaySurprise() {
     });
   };
 
-  const handleYes = () => {
+  const handleYes = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
+    // Safety check: Ensure the event target is not the No button or within it
+    if (e && noButtonRef.current && noButtonRef.current.contains(e.target as Node)) {
+        return;
+    }
+
     if (step === 3) {
       triggerFinalCelebration();
       // Delay the finale slightly to let confetti fly
@@ -335,6 +340,7 @@ export default function BirthdaySurprise() {
 
                         <div className="flex flex-row gap-3 sm:gap-4 justify-center items-center w-full min-h-[60px]">
                             <motion.button
+                                type="button"
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleYes}
@@ -350,6 +356,7 @@ export default function BirthdaySurprise() {
                             {/* Smooth Escaping No Button */}
                             <motion.button
                                 ref={noButtonRef}
+                                type="button"
                                 animate={{ 
                                     x: noButtonPos.x, 
                                     y: noButtonPos.y,
@@ -361,13 +368,15 @@ export default function BirthdaySurprise() {
                                     stiffness: 400, 
                                     damping: 30,
                                 }}
-                                onPointerEnter={handleNoHover}
+                                onPointerEnter={moveNoButton}
                                 onPointerDown={(e) => {
-                                    // Specifically handle touch/pointer down to move immediately
-                                    // and prevent the event from reaching anything else.
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleNoHover(e);
+                                }}
+                                onPointerUp={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    moveNoButton(e);
                                 }}
                                 onClick={(e) => {
                                     // Ensure click does nothing and doesn't bubble
@@ -375,9 +384,6 @@ export default function BirthdaySurprise() {
                                     e.stopPropagation();
                                 }}
                                 className="flex-1 sm:flex-none sm:px-10 py-4 rounded-2xl bg-white border border-[#f3e8ea] text-[#d1b9be] font-bold text-base transition-colors cursor-default select-none pointer-events-auto shadow-sm z-[9999] touch-none"
-                                style={{
-                                    zIndex: noButtonPos.isEscaping ? 9999 : 1
-                                }}
                             >
                                 No
                             </motion.button>

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import dynamic from "next/dynamic";
+import gsap from "gsap";
 
 // Dynamically import Three.js scene to avoid SSR issues
 const LoveFinale = dynamic(() => import("./LoveFinale"), { ssr: false });
@@ -49,7 +50,6 @@ const StarIcon = ({ size = 36 }) => (
 export default function BirthdaySurprise() {
   const [step, setStep] = useState(1);
   const [showFinale, setShowFinale] = useState(false);
-  const [noButtonPos, setNoButtonPos] = useState({ x: 0, y: 0, isEscaping: false });
   const [floatingShapes] = useState(() => {
     const shapes = Array.from({ length: 16 }, (_, i) => ({
       id: i,
@@ -69,72 +69,77 @@ export default function BirthdaySurprise() {
 
   // Reset "No" button position smoothly when step changes
   useEffect(() => {
-    if (noButtonPos.isEscaping) {
-        setNoButtonPos({ x: 0, y: 0, isEscaping: false });
+    if (noButtonRef.current) {
+        gsap.set(noButtonRef.current, {
+            clearProps: "all"
+        });
     }
   }, [step]);
 
-  // Snappy escape logic using Framer Motion
-  const handleNoHover = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent | any) => {
-    // Prevent default and propagation to stop accidental clicks on mobile
+  // snappy escape logic using GSAP
+  const moveButton = (e?: any) => {
     if (e) {
-      if (typeof e.preventDefault === 'function' && e.cancelable) e.preventDefault();
+      if (typeof e.preventDefault === 'function') e.preventDefault();
       if (typeof e.stopPropagation === 'function') e.stopPropagation();
     }
     
-    if (!noButtonRef.current || !modalRef.current) return;
+    if (!noButtonRef.current) return;
     
     const btn = noButtonRef.current;
-    const modal = modalRef.current;
-
-    // Get current dimensions
     const rect = btn.getBoundingClientRect();
-    const modalRect = modal.getBoundingClientRect();
-    const buttonWidth = rect.width || 120; // fallback width
-    const buttonHeight = rect.height || 48; // fallback height
+
+    // If not already fixed, switch to fixed to allow screen-wide jumping
+    // We capture current position to prevent a jump when switching to fixed
+    if (window.getComputedStyle(btn).position !== 'fixed') {
+      gsap.set(btn, {
+        position: 'fixed',
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        margin: 0,
+        zIndex: 9999
+      });
+    }
 
     // Boundary Check: Ensure button stays away from edges
-    const screenPadding = 40; 
-    const maxTop = window.innerHeight - buttonHeight - screenPadding;
-    const maxLeft = window.innerWidth - buttonWidth - screenPadding;
+    const screenPadding = 50; 
+    const maxTop = window.innerHeight - rect.height - screenPadding;
+    const maxLeft = window.innerWidth - rect.width - screenPadding;
 
     // Get pointer position for evasive logic
-    let px = 0, py = 0;
+    let px = -1000, py = -1000;
     if (e) {
-        if ('clientX' in e) {
-            px = e.clientX;
-            py = e.clientY;
-        } else if ('touches' in e && e.touches[0]) {
-            px = e.touches[0].clientX;
-            py = e.touches[0].clientY;
-        }
+      if ('clientX' in e) {
+        px = e.clientX;
+        py = e.clientY;
+      } else if (e.touches && e.touches[0]) {
+        px = e.touches[0].clientX;
+        py = e.touches[0].clientY;
+      }
     }
     
     // Pick a random target that is NOT where the mouse is
-    let targetScreenTop = 0;
-    let targetScreenLeft = 0;
+    let targetTop = 0;
+    let targetLeft = 0;
     let attempts = 0;
-    const minDistance = 150; // Minimum distance from pointer
+    const minDistance = 200; // Minimum distance from pointer
 
     do {
-        targetScreenTop = Math.max(screenPadding, Math.random() * (maxTop - screenPadding) + screenPadding);
-        targetScreenLeft = Math.max(screenPadding, Math.random() * (maxLeft - screenPadding) + screenPadding);
+        targetTop = gsap.utils.random(screenPadding, maxTop);
+        targetLeft = gsap.utils.random(screenPadding, maxLeft);
         attempts++;
         
         // Calculate distance from pointer
-        const dist = Math.sqrt(Math.pow(targetScreenLeft - px, 2) + Math.pow(targetScreenTop - py, 2));
-        if (dist > minDistance || attempts > 10) break;
+        const dist = Math.sqrt(Math.pow(targetLeft - px, 2) + Math.pow(targetTop - py, 2));
+        if (dist > minDistance || attempts > 20) break;
     } while (true);
 
-    // Convert screen coordinates to modal-relative offsets
-    // This assumes the button's static position is near the bottom of the modal
-    const newX = targetScreenLeft - (modalRect.left + modalRect.width / 2 - buttonWidth / 2);
-    const newY = targetScreenTop - (modalRect.top + modalRect.height - 100);
-
-    setNoButtonPos({
-        x: newX,
-        y: newY,
-        isEscaping: true
+    gsap.to(btn, {
+        left: targetLeft,
+        top: targetTop,
+        duration: 0.4,
+        ease: "back.out(1.5)", // Snappy, premium feel with a tiny overshoot
+        overwrite: "auto"
     });
   };
 
@@ -347,37 +352,13 @@ export default function BirthdaySurprise() {
                                 </span>
                             </motion.button>
                             
-                            {/* Smooth Escaping No Button */}
+                            {/* Smooth Escaping No Button - Using GSAP for consistency */}
                             <motion.button
                                 ref={noButtonRef}
-                                animate={{ 
-                                    x: noButtonPos.x, 
-                                    y: noButtonPos.y,
-                                    position: noButtonPos.isEscaping ? "fixed" : "static",
-                                    width: noButtonPos.isEscaping ? "120px" : "auto" // Maintain width when escaping
-                                }}
-                                transition={{ 
-                                    type: "spring", 
-                                    stiffness: 400, 
-                                    damping: 30,
-                                }}
-                                onPointerEnter={handleNoHover}
-                                onPointerDown={(e) => {
-                                    // Specifically handle touch/pointer down to move immediately
-                                    // and prevent the event from reaching anything else.
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleNoHover(e);
-                                }}
-                                onClick={(e) => {
-                                    // Ensure click does nothing and doesn't bubble
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
+                                onMouseEnter={() => moveButton()}
+                                onPointerDown={(e) => moveButton(e)}
+                                onClick={(e) => moveButton(e)}
                                 className="flex-1 sm:flex-none sm:px-10 py-4 rounded-2xl bg-white border border-[#f3e8ea] text-[#d1b9be] font-bold text-base transition-colors cursor-default select-none pointer-events-auto shadow-sm z-[9999] touch-none"
-                                style={{
-                                    zIndex: noButtonPos.isEscaping ? 9999 : 1
-                                }}
                             >
                                 No
                             </motion.button>

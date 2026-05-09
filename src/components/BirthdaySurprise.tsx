@@ -221,8 +221,8 @@ export default function BirthdaySurprise() {
         {!showFinale && (
           <motion.div 
             key="modal-container"
-            exit={{ opacity: 0, scale: 0.8, filter: "blur(20px)" }}
-            transition={{ duration: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }} // Removed heavy blur for mobile performance
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="relative w-full flex items-center justify-center"
           >
             {/* Aesthetic Pastel Mesh Gradient */}
@@ -267,6 +267,7 @@ export default function BirthdaySurprise() {
                         style={{
                             left: shape.left,
                             top: shape.top,
+                            willChange: "transform, opacity"
                         }}
                     >
                         {shape.type === 'heart' && <HeartIcon size={shape.width} fill="rgba(255,182,193,0.4)" />}

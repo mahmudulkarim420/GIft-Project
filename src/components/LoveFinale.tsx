@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useRef, useMemo, useEffect, useState } from "react";
+import React, { useRef, useMemo, useEffect, useState, memo } from "react";
 import { Canvas, useFrame, ThreeElements } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Extend JSX to support R3F elements
 declare global {
@@ -17,13 +17,17 @@ declare global {
 function useIsMobile() {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    setMobile(window.innerWidth < 768);
+    const checkMobile = () => setMobile(window.innerWidth < 768);
+    checkMobile();
+    // Use passive listener for better scroll performance
+    window.addEventListener("resize", checkMobile, { passive: true });
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
   return mobile;
 }
 
 // ─── Heart-shaped particle system ─────────────────────────────────────────
-function HeartParticles({ count }: { count: number }) {
+const HeartParticles = memo(function HeartParticles({ count }: { count: number }) {
   const ref = useRef<THREE.Points>(null);
   const trailRef = useRef<THREE.Points>(null);
 
@@ -90,7 +94,7 @@ function HeartParticles({ count }: { count: number }) {
   return (
     <group>
       {/* Heart outline */}
-      <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
+      <Points ref={ref} positions={positions} stride={3} frustumCulled={true}>
         <PointMaterial
           transparent
           vertexColors={false}
@@ -99,12 +103,12 @@ function HeartParticles({ count }: { count: number }) {
           sizeAttenuation
           depthWrite={false}
           blending={THREE.AdditiveBlending}
-          opacity={0.95}
+          opacity={0.8}
         />
       </Points>
 
       {/* Ambient sparkle cloud */}
-      <Points ref={trailRef} positions={dustPositions} stride={3} frustumCulled={false}>
+      <Points ref={trailRef} positions={dustPositions} stride={3} frustumCulled={true}>
         <PointMaterial
           transparent
           color="#c084fc"
@@ -112,17 +116,17 @@ function HeartParticles({ count }: { count: number }) {
           sizeAttenuation
           depthWrite={false}
           blending={THREE.AdditiveBlending}
-          opacity={0.5}
+          opacity={0.4}
         />
       </Points>
     </group>
   );
-}
+});
 
 // ─── Bokeh background layer ────────────────────────────────────────────────
-function BokehLayer() {
+const BokehLayer = memo(function BokehLayer() {
   const ref = useRef<THREE.Points>(null);
-  const count = 300;
+  const count = 150; // Reduced for performance
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -142,7 +146,7 @@ function BokehLayer() {
   });
 
   return (
-    <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
+    <Points ref={ref} positions={positions} stride={3} frustumCulled={true}>
       <PointMaterial
         transparent
         color="#e879f9"
@@ -150,14 +154,14 @@ function BokehLayer() {
         sizeAttenuation
         depthWrite={false}
         blending={THREE.AdditiveBlending}
-        opacity={0.25}
+        opacity={0.2}
       />
     </Points>
   );
-}
+});
 
 // ─── 3D Scene ─────────────────────────────────────────────────────────────
-function Scene({ particleCount }: { particleCount: number }) {
+const Scene = memo(function Scene({ particleCount }: { particleCount: number }) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(({ clock, mouse }) => {
@@ -171,9 +175,9 @@ function Scene({ particleCount }: { particleCount: number }) {
   return (
     <>
       <ambientLight intensity={0.3} color="#ff80b5" />
-      <pointLight position={[0, 3, 3]} intensity={2} color="#ff6eb4" />
-      <pointLight position={[-4, -2, 2]} intensity={1} color="#818cf8" />
-      <pointLight position={[4, -2, 2]} intensity={1} color="#e879f9" />
+      <pointLight position={[0, 3, 3]} intensity={1.5} color="#ff6eb4" />
+      <pointLight position={[-4, -2, 2]} intensity={0.8} color="#818cf8" />
+      <pointLight position={[4, -2, 2]} intensity={0.8} color="#e879f9" />
 
       <BokehLayer />
       <group ref={groupRef}>
@@ -181,14 +185,14 @@ function Scene({ particleCount }: { particleCount: number }) {
       </group>
     </>
   );
-}
+});
 
 // ─── Floating CSS heart particle ──────────────────────────────────────────
-function FloatingHeart({ delay, left, size }: { delay: number; left: string; size: number }) {
+const FloatingHeart = memo(function FloatingHeart({ delay, left, size }: { delay: number; left: string; size: number }) {
   return (
     <motion.div
       className="absolute select-none pointer-events-none"
-      style={{ left, bottom: "-10%", fontSize: size }}
+      style={{ left, bottom: "-10%", fontSize: size, willChange: "transform, opacity" }}
       initial={{ y: 0, opacity: 0, scale: 0.5 }}
       animate={{
         y: [0, -(window.innerHeight * 1.3)],
@@ -206,16 +210,16 @@ function FloatingHeart({ delay, left, size }: { delay: number; left: string; siz
       ❤️
     </motion.div>
   );
-}
+});
 
 // ─── Gift Card Data ────────────────────────────────────────────────────────
 const giftCards = [
   {
     id: 1,
     icon: "💌",
-    title: "A Letter From My Heart",
+    title: "Happy Birthday, My srissy ❤️",
     message:
-      "Every word I write feels too small to hold what I feel for you. You are my favourite chapter, my softest place to land, and the most beautiful reason I smile every single day. 🌸",
+      `Its your 2nd birthday together, and you still make my world brighter every day. You're my best supporter, I’m so lucky to have you. Love you always 🎂✨`,
     gradient: "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #ffecd2 100%)",
     glowColor: "#ff6eb4",
     border: "rgba(255,110,180,0.35)",
@@ -227,9 +231,9 @@ const giftCards = [
   {
     id: 2,
     icon: "🌷",
-    title: "My Promise To You",
+    title: "To My Pasandida Aurat ❤️",
     message:
-      "I promise to be your sunshine on cloudy days, your laughter when the world feels heavy, and your forever person through every season of life. You deserve all the love in the universe. 💜",
+      `Being with you has made my life happier, calmer, and more beautiful. Every moment with you feels special, and I’m truly grateful to have you beside me. Thank you for all the love, care, and smiles you give me every day. No matter what happens, I always want to stay by your side and make more memories with you. You are not just my girlfriend, you are my peace, my happiness, and my favorite person. I love you so much. 💖`,
     gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 50%, #d4a8ff 100%)",
     glowColor: "#c084fc",
     border: "rgba(192,132,252,0.35)",
@@ -241,9 +245,9 @@ const giftCards = [
   {
     id: 3,
     icon: "🎀",
-    title: "A Gift Wrapped In Love",
+    title: "শুনো.......Srisss bliss",
     message:
-      "This gift isn't just a present — it's a piece of my heart wrapped in ribbon. You make ordinary moments magical and I want to spend every moment making you feel as special as you truly are. 🎁",
+      "বিয়া তোরেই করুম গুন্ডি... 🙄😌",
     gradient: "linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f093fb 100%)",
     glowColor: "#f093fb",
     border: "rgba(240,147,251,0.35)",
@@ -255,11 +259,11 @@ const giftCards = [
 ];
 
 // ─── Ambient Sparkle Particle ──────────────────────────────────────────────
-function SparkleParticle({ x, y, delay }: { x: string; y: string; delay: number }) {
+const SparkleParticle = memo(function SparkleParticle({ x, y, delay }: { x: string; y: string; delay: number }) {
   return (
     <motion.div
       className="absolute pointer-events-none select-none text-xs"
-      style={{ left: x, top: y }}
+      style={{ left: x, top: y, willChange: "transform, opacity" }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0], y: [0, -30, -60] }}
       transition={{ duration: 2.5, delay, repeat: Infinity, repeatDelay: Math.random() * 3 }}
@@ -267,7 +271,7 @@ function SparkleParticle({ x, y, delay }: { x: string; y: string; delay: number 
       ✨
     </motion.div>
   );
-}
+});
 
 // ─── Gift Card Component ───────────────────────────────────────────────────
 function GiftCard({ card, index }: { card: typeof giftCards[0]; index: number }) {
@@ -288,12 +292,13 @@ function GiftCard({ card, index }: { card: typeof giftCards[0]; index: number })
         background: "rgba(255,255,255,0.06)",
         border: `1.5px solid ${card.border}`,
         borderRadius: "24px",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        backdropFilter: "blur(12px)", // Reduced blur for performance
+        WebkitBackdropFilter: "blur(12px)",
         boxShadow: hovered
-          ? `0 0 40px ${card.glowColor}55, 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)`
-          : `0 0 20px ${card.glowColor}22, 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)`,
-        transition: "box-shadow 0.4s ease",
+          ? `0 0 30px ${card.glowColor}44, 0 16px 40px rgba(0,0,0,0.3)`
+          : `0 0 15px ${card.glowColor}11, 0 8px 24px rgba(0,0,0,0.2)`,
+        transition: "box-shadow 0.4s ease, transform 0.4s ease",
+        willChange: "transform, box-shadow",
         position: "relative",
         overflow: "hidden",
         flex: "1 1 280px",
@@ -319,6 +324,7 @@ function GiftCard({ card, index }: { card: typeof giftCards[0]; index: number })
           position: "absolute", inset: "-2px", borderRadius: "26px",
           background: `radial-gradient(ellipse at 50% 0%, ${card.glowColor}33, transparent 70%)`,
           pointerEvents: "none",
+          willChange: "transform, opacity",
         }}
       />
 
@@ -395,10 +401,10 @@ function GiftCard({ card, index }: { card: typeof giftCards[0]; index: number })
 }
 
 // ─── Gift Notes Section ────────────────────────────────────────────────────
-function GiftNotesSection() {
+const GiftNotesSection = memo(function GiftNotesSection() {
   const sparkles = useMemo(
     () =>
-      Array.from({ length: 20 }, (_, i) => ({
+      Array.from({ length: 12 }, (_, i) => ({ // Reduced from 20 to 12
         id: i,
         x: `${Math.random() * 100}%`,
         y: `${Math.random() * 100}%`,
@@ -426,9 +432,10 @@ function GiftNotesSection() {
       {/* Soft glow blobs */}
       <div style={{
         position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)",
-        width: "60vw", height: "30vh", borderRadius: "50%",
-        background: "radial-gradient(circle, #ff6eb422, transparent 70%)",
-        filter: "blur(60px)", pointerEvents: "none",
+        width: "80vw", height: "40vh", borderRadius: "50%",
+        // Removed heavy filter: blur() and used a softer gradient
+        background: "radial-gradient(ellipse, rgba(255, 110, 180, 0.15) 0%, rgba(255, 110, 180, 0.05) 40%, transparent 70%)",
+        pointerEvents: "none",
       }} />
 
       {/* Section Heading */}
@@ -479,7 +486,7 @@ function GiftNotesSection() {
               fontStyle: "italic", fontFamily: "'Georgia', serif",
             }}
           >
-            Three little tokens of infinite love 🌸
+            Three little notes of infinite love 🌸
           </motion.p>
         </motion.div>
       </div>
@@ -517,23 +524,31 @@ function GiftNotesSection() {
         transition={{ delay: 1.2, duration: 1 }}
         style={{
           textAlign: "center", marginTop: "20px",
-          fontSize: "1.6rem", filter: "drop-shadow(0 0 10px #ff6eb4)",
+          fontSize: "1.6rem", filter: "drop-shadow(0 0 8px #ff6eb4)",
         }}
       >
         💗 💜 💗
       </motion.p>
     </section>
   );
-}
+});
 
 // ─── Main LoveFinale Component ─────────────────────────────────────────────
 export default function LoveFinale() {
   const isMobile = useIsMobile();
-  const particleCount = isMobile ? 1800 : 5000;
+  // Reduced particle counts for mobile to maintain 60 FPS
+  const particleCount = isMobile ? 800 : 2500;
+  
+  // Delay mounting heavy Canvas elements to allow Framer Motion transitions to complete smoothly
+  const [mountCanvas, setMountCanvas] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setMountCanvas(true), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const floatingHearts = useMemo(
     () =>
-      Array.from({ length: 18 }, (_, i) => ({
+      Array.from({ length: isMobile ? 8 : 15 }, (_, i) => ({
         id: i,
         delay: i * 1.1,
         left: `${4 + Math.random() * 92}%`,
@@ -559,30 +574,40 @@ export default function LoveFinale() {
       {/* ── Hero Section (full viewport) ──────────────────────────────── */}
       <div style={{ position: "relative", width: "100%", minHeight: "100vh", flexShrink: 0 }}>
         {/* ── Ambient gradient glow layers ─────────────────────────────── */}
+        {/* Removed CSS blur() on large elements as it causes huge layout/paint thrashing on scroll. Used soft gradients instead. */}
         <div className="absolute inset-0 pointer-events-none">
           <div
-            className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[70vw] h-[50vh] rounded-full opacity-30 blur-[100px]"
-            style={{ background: "radial-gradient(circle, #ff6eb4, transparent 70%)" }}
+            className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[80vw] h-[60vh] rounded-full opacity-40"
+            style={{ background: "radial-gradient(ellipse, rgba(255, 110, 180, 0.4) 0%, rgba(255, 110, 180, 0.1) 40%, transparent 70%)" }}
           />
           <div
-            className="absolute bottom-[10%] left-[10%] w-[40vw] h-[40vh] rounded-full opacity-20 blur-[80px]"
-            style={{ background: "radial-gradient(circle, #818cf8, transparent 70%)" }}
+            className="absolute bottom-[10%] left-[10%] w-[50vw] h-[50vh] rounded-full opacity-30"
+            style={{ background: "radial-gradient(ellipse, rgba(129, 140, 248, 0.4) 0%, rgba(129, 140, 248, 0.1) 40%, transparent 70%)" }}
           />
           <div
-            className="absolute bottom-[15%] right-[10%] w-[35vw] h-[35vh] rounded-full opacity-20 blur-[80px]"
-            style={{ background: "radial-gradient(circle, #e879f9, transparent 70%)" }}
+            className="absolute bottom-[15%] right-[10%] w-[45vw] h-[45vh] rounded-full opacity-30"
+            style={{ background: "radial-gradient(ellipse, rgba(232, 121, 249, 0.4) 0%, rgba(232, 121, 249, 0.1) 40%, transparent 70%)" }}
           />
         </div>
 
         {/* ── Three.js canvas ──────────────────────────────────────────── */}
-        <Canvas
-          dpr={[1, isMobile ? 1.5 : 2]}
-          camera={{ position: [0, 0, 6], fov: isMobile ? 65 : 55 }}
-          gl={{ antialias: !isMobile, alpha: true }}
-          style={{ position: "absolute", inset: 0 }}
-        >
-          <Scene particleCount={particleCount} />
-        </Canvas>
+        {mountCanvas && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ duration: 1.5 }} 
+            className="absolute inset-0 pointer-events-none"
+          >
+            <Canvas
+              dpr={[1, isMobile ? 1 : 1.5]} // Capped DPR for mobile performance
+              camera={{ position: [0, 0, 6], fov: isMobile ? 65 : 55 }}
+              gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
+              style={{ position: "absolute", inset: 0 }}
+            >
+              <Scene particleCount={particleCount} />
+            </Canvas>
+          </motion.div>
+        )}
 
         {/* ── Floating heart particles (CSS layer) ─────────────────────── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">

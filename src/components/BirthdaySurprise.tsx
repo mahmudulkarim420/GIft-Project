@@ -330,8 +330,8 @@ export default function BirthdaySurprise() {
                             className="text-3xl md:text-4xl font-bold mb-4 tracking-tight leading-tight text-[#4a3a3d]"
                         >
                             {step === 1 && "Hey! Ready for a surprise?"}
-                            {step === 2 && "Are you really sure?"}
-                            {step === 3 && "Happy Birthday!"}
+                            {step === 2 && "Happy Birthday!"}
+                            {step === 3 && "Will U be my girls "}
                         </motion.h2>
 
                         <motion.p 
@@ -341,8 +341,8 @@ export default function BirthdaySurprise() {
                             className="text-base md:text-lg text-[#8a7a7d] mb-10 leading-relaxed max-w-[260px]"
                         >
                             {step === 1 && "I've been waiting all day to share something special with you."}
-                            {step === 2 && "This might just make your day even better ❤️"}
-                            {step === 3 && "You're someone truly special and you deserve all the happiness ✨"}
+                            {step === 2 && "You're someone truly special and you deserve all the happiness ✨"}
+                            {step === 3 && "bed story Princess.?🤌"}
                         </motion.p>
 
                         <div className="flex flex-row gap-3 sm:gap-4 justify-center items-center w-full min-h-[60px]">
@@ -355,8 +355,8 @@ export default function BirthdaySurprise() {
                             >
                                 <span className="relative z-10 whitespace-nowrap">
                                     {step === 1 && "Yes, I'm ready! ❤️"}
-                                    {step === 2 && "Yes, show me! ❤️"}
-                                    {step === 3 && "Aww, thank you! ❤️"}
+                                    {step === 2 && "Aww, thank you! ❤️"}
+                                    {step === 3 && "Yes, Of course! ❤️"}
                                 </span>
                             </motion.button>
                             

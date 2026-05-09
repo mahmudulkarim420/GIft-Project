@@ -247,7 +247,7 @@ const giftCards = [
     icon: "🎀",
     title: "শুনো.......Srisss bliss",
     message:
-      "বিয়া তোরেই করুম গুন্ডি... 🙄😌",
+      "বিয়া তোরেই করুম গুন্ডি... 💍🫵",
     gradient: "linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f093fb 100%)",
     glowColor: "#f093fb",
     border: "rgba(240,147,251,0.35)",

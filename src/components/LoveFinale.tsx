@@ -217,9 +217,9 @@ const giftCards = [
   {
     id: 1,
     icon: "💌",
-    title: "Happy Birthday, My srissy ❤️",
+    title: "Happy Birthday, My Chammak Challo ❤️",
     message:
-      `Its your 2nd birthday together, and you still make my world brighter every day. You're my best supporter, I’m so lucky to have you. Love you always 🎂✨`,
+      `Its your first birthday together, and you still make my world brighter every day. You're my best supporter, I’m so lucky to have you. Love you always 🎂✨`,
     gradient: "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #ffecd2 100%)",
     glowColor: "#ff6eb4",
     border: "rgba(255,110,180,0.35)",
@@ -233,7 +233,7 @@ const giftCards = [
     icon: "🌷",
     title: "To My Pasandida Aurat ❤️",
     message:
-      `Being with you has made my life happier, calmer, and more beautiful. Every moment with you feels special, and I’m truly grateful to have you beside me. Thank you for all the love, care, and smiles you give me every day. No matter what happens, I always want to stay by your side and make more memories with you. You are not just my girlfriend, you are my peace, my happiness, and my favorite person. I love you so much. 💖`,
+      `Being with you has made my life happier, calmer, and more beautiful. Every moment with you feels special, and I’m truly grateful to have you beside me. Thank you for all the love, care, and smiles you give me every day. No matter what happens, I always want to stay by your side and make more memories with you. You are not just my friend, you are my peace, my happiness, and my favorite person. I love you so much. 💖`,
     gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 50%, #d4a8ff 100%)",
     glowColor: "#c084fc",
     border: "rgba(192,132,252,0.35)",
@@ -245,10 +245,10 @@ const giftCards = [
   {
     id: 3,
     icon: "🎀",
-    title: "শুনো.......Srisss bliss",
+    title: "শুনো.......Chammak Challo",
     message:
-      "বিয়া তোরেই করুম গুন্ডি... 💍🫵",
-    gradient: "linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f093fb 100%)",
+      "I love you forever....🌸💗",
+    gradient: "linear-gradient(15deg, #f6d365 0%, #fda085 50%, #f093fb 100%)",
     glowColor: "#f093fb",
     border: "rgba(240,147,251,0.35)",
     floatDelay: 0.8,
@@ -629,7 +629,7 @@ export default function LoveFinale() {
               textShadow: "0 0 20px #ff6eb4, 0 0 60px #ff6eb4aa, 0 0 120px #e879f944",
             }}
           >
-            I Love You Srissy❤️
+            I Love You Khushbu❤️
           </motion.h1>
 
           <motion.p

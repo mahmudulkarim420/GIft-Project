@@ -184,7 +184,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         {/* Stylish Animated Progress Indicator */}
         <div className="w-64 sm:w-80 h-2 bg-white/40 rounded-full overflow-hidden backdrop-blur-md shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] relative">
           <motion.div
-            className="h-full bg-gradient-to-r from-rose-300 via-purple-300 to-rose-400 rounded-full absolute left-0 top-0"
+            className="h-full bg-linear-to-r from-rose-300 via-purple-300 to-rose-400 rounded-full absolute left-0 top-0"
             style={{ width: `${progress}%` }}
             initial={{ width: "0%" }}
           />
